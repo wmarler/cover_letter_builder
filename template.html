@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{PAGE_TITLE}}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&family=Source+Sans+3:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{CSS_HREF}}">
+</head>
+<body class="page-letter">
+
+  <article class="letter-paper{{WIDE_CLASS}}">
+
+    <header class="letter-header">
+      <p class="letter-kicker">{{KICKER}}</p>
+      <h1 class="letter-title">{{HEADING}}</h1>
+      <time class="letter-date" datetime="{{DATE_ISO}}">{{DATE_DISPLAY}}</time>
+    </header>
+
+    <div class="letter-body">
+{{BODY}}
+    </div>
+
+    <footer class="letter-footer">
+      <p style="margin: 0 0 0.25rem;">Best regards,</p>
+      <p class="letter-signature">{{SIGNATURE}}</p>
+    </footer>
+
+  </article>
+
+</body>
+</html>

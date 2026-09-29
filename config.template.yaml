@@ -1,0 +1,11 @@
+# Copy this file to config.yaml and adjust for your environment:
+#   cp config.template.yaml config.yaml
+
+# Directories relative to this project root unless absolute paths are given.
+yaml_dir: yaml
+html_dir: html
+template_path: template.html
+
+# Optional: copy built HTML here after each build.
+# Set to null (or omit) to skip deployment.
+deploy_dir: null

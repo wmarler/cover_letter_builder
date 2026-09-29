@@ -1,0 +1,33 @@
+# Example cover letter — copy to yaml/acme.yaml and edit.
+# Not built by default (template.yaml is excluded from bulk builds).
+
+slug: acme
+output: Acme.html
+company: Acme Corp
+heading: "Software Engineer · Acme Corp"
+date: 2026-01-15
+
+salutation: Dear Acme Corp,
+
+paragraphs:
+  - text: |
+      I found your job posting and I'm excited to apply. Here is why I'd be a strong fit:
+
+  - label: "Relevant experience:"
+    text: |
+      Describe a concrete accomplishment. Use *emphasis* or [links](https://example.com) sparingly.
+
+  - label: "Why this role:"
+    text: |
+      Explain why you want this job and this company specifically.
+
+closing: |
+  Thank you for your time and consideration. I hope to speak with you soon.
+
+# Optional fields:
+# page_title: "Cover Letter — Your Name — Acme Corp"
+# date_display: "15 January, 2026"
+# kicker: Cover Letter
+# signature: Your Name
+# css_href: ../letter.css
+# wide: false

@@ -1,0 +1,21 @@
+# Local configuration (paths, deploy target)
+config.yaml
+config.yml
+
+# Generated HTML output
+html/
+
+# Personal letter content — only yaml/template.yaml is published
+yaml/*
+!yaml/template.yaml
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# Editor / OS
+.DS_Store
+*.swp
+*~

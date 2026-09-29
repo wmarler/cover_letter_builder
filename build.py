@@ -1,0 +1,275 @@
+#!/usr/bin/env python3
+"""Build cover letter HTML from YAML sources."""
+
+from __future__ import annotations
+
+import argparse
+import html
+import re
+import shutil
+import sys
+from dataclasses import dataclass
+from datetime import datetime
+from pathlib import Path
+
+import yaml
+
+ROOT = Path(__file__).resolve().parent
+DEFAULT_CONFIG_PATH = ROOT / "config.yaml"
+EXCLUDED_YAML = {"template.yaml"}
+
+INLINE_MARKUP_RE = re.compile(
+    r"\*\*(.+?)\*\*|\*(.+?)\*|\[(.+?)\]\((.+?)\)",
+    re.DOTALL,
+)
+
+
+@dataclass
+class BuildConfig:
+    yaml_dir: Path
+    html_dir: Path
+    template_path: Path
+    deploy_dir: Path | None
+
+
+def normalize_date(value) -> str:
+    if hasattr(value, "strftime"):
+        return value.strftime("%Y-%m-%d")
+    return str(value)
+
+
+def format_display_date(iso_date) -> str:
+    if hasattr(iso_date, "day") and hasattr(iso_date, "strftime"):
+        parsed = iso_date
+    else:
+        parsed = datetime.strptime(str(iso_date), "%Y-%m-%d")
+    return f"{parsed.day} {parsed.strftime('%B')}, {parsed.year}"
+
+
+def render_inline(text: str) -> str:
+    """Escape plain text but allow *em*, **strong**, and [links](url)."""
+    parts: list[str] = []
+    pos = 0
+    for match in INLINE_MARKUP_RE.finditer(text):
+        parts.append(html.escape(text[pos : match.start()]))
+        if match.group(1) is not None:
+            parts.append(f"<strong>{html.escape(match.group(1))}</strong>")
+        elif match.group(2) is not None:
+            parts.append(f"<em>{html.escape(match.group(2))}</em>")
+        elif match.group(3) is not None:
+            href = html.escape(match.group(4), quote=True)
+            label = html.escape(match.group(3))
+            parts.append(f'<a href="{href}">{label}</a>')
+        pos = match.end()
+    parts.append(html.escape(text[pos:]))
+    return "".join(parts)
+
+
+def render_paragraph(text: str, label: str | None = None) -> str:
+    body = render_inline(text.strip())
+    if label:
+        label_html = html.escape(label.strip())
+        return f"      <p><strong>{label_html}</strong> {body}</p>"
+    return f"      <p>{body}</p>"
+
+
+def build_body(data: dict) -> str:
+    blocks: list[str] = []
+
+    salutation = data.get("salutation", "").strip()
+    if salutation:
+        blocks.append(render_paragraph(salutation))
+
+    for paragraph in data.get("paragraphs", []):
+        if not isinstance(paragraph, dict):
+            raise ValueError(f"Each paragraph must be a mapping, got {type(paragraph)!r}")
+        text = paragraph.get("text", "")
+        if not str(text).strip():
+            raise ValueError(f"Paragraph in {data.get('slug')} is missing text")
+        blocks.append(render_paragraph(str(text), paragraph.get("label")))
+
+    closing = data.get("closing", "").strip()
+    if closing:
+        blocks.append(render_paragraph(closing))
+
+    return "\n\n".join(blocks)
+
+
+def validate(data: dict, source: Path) -> None:
+    required = ("slug", "company", "heading", "date")
+    missing = [field for field in required if not data.get(field)]
+    if missing:
+        raise ValueError(f"{source.name}: missing required field(s): {', '.join(missing)}")
+
+    normalize_date(data["date"])
+    datetime.strptime(normalize_date(data["date"]), "%Y-%m-%d")
+
+
+def render_letter(data: dict, template: str) -> str:
+    company = data["company"]
+    date_iso = normalize_date(data["date"])
+    date_display = data.get("date_display") or format_display_date(data["date"])
+    page_title = data.get("page_title") or f"Cover Letter — Will — {company}"
+    kicker = data.get("kicker", "Cover Letter")
+    signature = data.get("signature", "Will")
+    css_href = data.get("css_href", "../letter.css")
+    wide_class = " letter-paper--wide" if data.get("wide") else ""
+
+    body = build_body(data)
+
+    replacements = {
+        "{{PAGE_TITLE}}": html.escape(page_title),
+        "{{CSS_HREF}}": html.escape(css_href, quote=True),
+        "{{WIDE_CLASS}}": wide_class,
+        "{{KICKER}}": html.escape(kicker),
+        "{{HEADING}}": html.escape(data["heading"]),
+        "{{DATE_ISO}}": html.escape(date_iso),
+        "{{DATE_DISPLAY}}": html.escape(date_display),
+        "{{BODY}}": body,
+        "{{SIGNATURE}}": html.escape(signature),
+    }
+
+    rendered = template
+    for token, value in replacements.items():
+        rendered = rendered.replace(token, value)
+    return rendered
+
+
+def output_name(data: dict) -> str:
+    return data.get("output") or f"{data['slug']}.html"
+
+
+def load_yaml(path: Path) -> dict:
+    with path.open(encoding="utf-8") as handle:
+        data = yaml.safe_load(handle)
+    if not isinstance(data, dict):
+        raise ValueError(f"{path.name}: expected a YAML mapping at top level")
+    return data
+
+
+def resolve_path(base: Path, value: str) -> Path:
+    path = Path(value)
+    if path.is_absolute():
+        return path
+    return (base / path).resolve()
+
+
+def load_config(config_path: Path) -> BuildConfig:
+    if not config_path.exists():
+        raise FileNotFoundError(
+            f"Config not found: {config_path}\n"
+            f"Copy config.template.yaml to config.yaml and edit paths."
+        )
+
+    with config_path.open(encoding="utf-8") as handle:
+        raw = yaml.safe_load(handle) or {}
+
+    if not isinstance(raw, dict):
+        raise ValueError(f"{config_path.name}: expected a YAML mapping at top level")
+
+    required = ("yaml_dir", "html_dir", "template_path")
+    missing = [field for field in required if not raw.get(field)]
+    if missing:
+        raise ValueError(f"{config_path.name}: missing required field(s): {', '.join(missing)}")
+
+    deploy_raw = raw.get("deploy_dir")
+    deploy_dir = None if deploy_raw in (None, "", "null") else resolve_path(ROOT, str(deploy_raw))
+
+    return BuildConfig(
+        yaml_dir=resolve_path(ROOT, str(raw["yaml_dir"])),
+        html_dir=resolve_path(ROOT, str(raw["html_dir"])),
+        template_path=resolve_path(ROOT, str(raw["template_path"])),
+        deploy_dir=deploy_dir,
+    )
+
+
+def build_one(source: Path, template: str, config: BuildConfig, deploy: bool) -> Path:
+    data = load_yaml(source)
+    validate(data, source)
+    rendered = render_letter(data, template)
+    config.html_dir.mkdir(parents=True, exist_ok=True)
+
+    destination = config.html_dir / output_name(data)
+    destination.write_text(rendered, encoding="utf-8")
+    print(f"  wrote {destination}")
+
+    if deploy and config.deploy_dir is not None:
+        config.deploy_dir.mkdir(parents=True, exist_ok=True)
+        deployed = config.deploy_dir / destination.name
+        shutil.copy2(destination, deployed)
+        print(f"  copied {deployed}")
+
+    return destination
+
+
+def discover_sources(config: BuildConfig, selected: list[str] | None) -> list[Path]:
+    if selected:
+        paths = []
+        for slug in selected:
+            candidate = config.yaml_dir / (slug if slug.endswith(".yaml") else f"{slug}.yaml")
+            if not candidate.exists():
+                raise FileNotFoundError(f"No YAML file found: {candidate}")
+            paths.append(candidate)
+        return paths
+
+    return sorted(
+        path
+        for path in config.yaml_dir.glob("*.yaml")
+        if path.name not in EXCLUDED_YAML
+    )
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser(description="Build cover letter HTML from YAML.")
+    parser.add_argument(
+        "slugs",
+        nargs="*",
+        help="YAML slug(s) to build (default: all files in yaml/, except template.yaml)",
+    )
+    parser.add_argument(
+        "--config",
+        default=str(DEFAULT_CONFIG_PATH),
+        help="Path to config YAML (default: ./config.yaml)",
+    )
+    parser.add_argument(
+        "--no-deploy",
+        action="store_true",
+        help="Skip copying built HTML to deploy_dir from config",
+    )
+    args = parser.parse_args()
+
+    try:
+        config = load_config(Path(args.config))
+    except (FileNotFoundError, ValueError) as exc:
+        print(f"Error: {exc}", file=sys.stderr)
+        return 1
+
+    if not config.template_path.exists():
+        print(f"Missing template: {config.template_path}", file=sys.stderr)
+        return 1
+
+    template = config.template_path.read_text(encoding="utf-8")
+    sources = discover_sources(config, args.slugs or None)
+    if not sources:
+        print(f"No YAML files found in {config.yaml_dir}", file=sys.stderr)
+        return 1
+
+    deploy = not args.no_deploy and config.deploy_dir is not None
+    if not args.no_deploy and config.deploy_dir is None:
+        print("Note: deploy_dir not set in config; skipping deployment.")
+
+    print(f"Building {len(sources)} letter(s)...")
+    try:
+        for source in sources:
+            print(source.name + ":")
+            build_one(source, template, config, deploy=deploy)
+    except (ValueError, yaml.YAMLError, OSError) as exc:
+        print(f"Error: {exc}", file=sys.stderr)
+        return 1
+
+    print("Done.")
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
