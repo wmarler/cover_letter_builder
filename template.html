@@ -6,18 +6,21 @@
   <title>{{PAGE_TITLE}}</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&family=Source+Sans+3:wght@400;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Comfortaa:wght@700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{LETTER_CSS_HREF}}">
   <link rel="stylesheet" href="{{CSS_HREF}}">
 </head>
 <body class="page-letter">
 
-  <article class="letter-paper{{WIDE_CLASS}}">
+  <article class="letter-paper letter-paper--cover">
 
-    <header class="letter-header">
-      <p class="letter-kicker">{{KICKER}}</p>
-      <h1 class="letter-title">{{HEADING}}</h1>
-      <time class="letter-date" datetime="{{DATE_ISO}}">{{DATE_DISPLAY}}</time>
+    <header class="letter-contact-header">
+      <p class="letter-name">{{AUTHOR_NAME}}</p>
+{{CONTACT_TABLE}}
+      <hr class="letter-rule">
     </header>
+
+    <p class="letter-date"><time datetime="{{DATE_ISO}}">{{DATE_DISPLAY}}</time></p>
 
     <div class="letter-body">
 {{BODY}}

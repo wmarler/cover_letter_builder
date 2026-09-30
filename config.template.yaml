@@ -1,11 +1,24 @@
 # Copy this file to config.yaml and adjust for your environment:
 #   cp config.template.yaml config.yaml
 
-# Directories relative to this project root unless absolute paths are given.
 yaml_dir: yaml
 html_dir: html
 template_path: template.html
+css_path: cover-letter.css
+letter_css_href: /letter.css
+css_href: /cover_letters/cover-letter.css
 
 # Optional: copy built HTML here after each build.
 # Set to null (or omit) to skip deployment.
 deploy_dir: null
+
+# Contact header — defaults for all letters (override per letter in yaml/).
+author:
+  name: Your Full Name
+  title: Your Default Job Title
+  location: City, ST
+  remote: false
+  email: you@example.com
+  phone: 555-555-5555
+  linkedin: https://linkedin.com/in/yourhandle
+  github: https://github.com/yourhandle

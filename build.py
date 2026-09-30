@@ -11,6 +11,7 @@ import sys
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
+from typing import Any
 
 import yaml
 
@@ -25,11 +26,27 @@ INLINE_MARKUP_RE = re.compile(
 
 
 @dataclass
+class AuthorConfig:
+    name: str
+    email: str
+    phone: str
+    linkedin: str
+    github: str
+    title: str
+    location: str
+    remote: bool = False
+
+
+@dataclass
 class BuildConfig:
     yaml_dir: Path
     html_dir: Path
     template_path: Path
     deploy_dir: Path | None
+    letter_css_href: str
+    css_href: str
+    css_path: Path | None
+    author: AuthorConfig
 
 
 def normalize_date(value) -> str:
@@ -44,6 +61,58 @@ def format_display_date(iso_date) -> str:
     else:
         parsed = datetime.strptime(str(iso_date), "%Y-%m-%d")
     return f"{parsed.day} {parsed.strftime('%B')}, {parsed.year}"
+
+
+def link_label(url: str) -> str:
+    cleaned = url.strip()
+    for prefix in ("https://", "http://"):
+        if cleaned.startswith(prefix):
+            cleaned = cleaned[len(prefix) :]
+    return cleaned.rstrip("/")
+
+
+def render_contact_table(
+    title: str,
+    location: str,
+    remote: bool,
+    email: str,
+    phone: str,
+    linkedin: str,
+    github: str,
+) -> str:
+    email_link = (
+        f'<a href="mailto:{html.escape(email)}">{html.escape(email)}</a>'
+    )
+    linkedin_link = (
+        f'<a href="{html.escape(linkedin, quote=True)}">'
+        f"{html.escape(link_label(linkedin))}</a>"
+    )
+    github_link = (
+        f'<a href="{html.escape(github, quote=True)}">'
+        f"{html.escape(link_label(github))}</a>"
+    )
+    remote_cell = "(Remote)" if remote else ""
+
+    return f"""      <table class="letter-contact-table">
+        <colgroup>
+          <col class="letter-contact-col">
+          <col class="letter-contact-col">
+          <col class="letter-contact-col">
+          <col class="letter-contact-col">
+        </colgroup>
+        <tr>
+          <td>{html.escape(title)}</td>
+          <td>{html.escape(location)}</td>
+          <td>{email_link}</td>
+          <td>{linkedin_link}</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>{html.escape(remote_cell)}</td>
+          <td>{html.escape(phone)}</td>
+          <td>{github_link}</td>
+        </tr>
+      </table>"""
 
 
 def render_inline(text: str) -> str:
@@ -96,7 +165,7 @@ def build_body(data: dict) -> str:
 
 
 def validate(data: dict, source: Path) -> None:
-    required = ("slug", "company", "heading", "date")
+    required = ("slug", "company", "date")
     missing = [field for field in required if not data.get(field)]
     if missing:
         raise ValueError(f"{source.name}: missing required field(s): {', '.join(missing)}")
@@ -105,24 +174,59 @@ def validate(data: dict, source: Path) -> None:
     datetime.strptime(normalize_date(data["date"]), "%Y-%m-%d")
 
 
-def render_letter(data: dict, template: str) -> str:
+def resolve_author(raw: dict[str, Any], config_path: Path) -> AuthorConfig:
+    author = raw.get("author")
+    if not isinstance(author, dict):
+        raise ValueError(f"{config_path.name}: missing required 'author' mapping")
+
+    required = ("name", "email", "phone", "linkedin", "github", "title", "location")
+    missing = [field for field in required if not author.get(field)]
+    if missing:
+        raise ValueError(f"{config_path.name}: author missing field(s): {', '.join(missing)}")
+
+    return AuthorConfig(
+        name=str(author["name"]),
+        email=str(author["email"]),
+        phone=str(author["phone"]),
+        linkedin=str(author["linkedin"]),
+        github=str(author["github"]),
+        title=str(author["title"]),
+        location=str(author["location"]),
+        remote=bool(author.get("remote", False)),
+    )
+
+
+def letter_field(data: dict, author: AuthorConfig, field: str) -> Any:
+    if field in data and data[field] is not None:
+        return data[field]
+    return getattr(author, field)
+
+
+def render_letter(data: dict, template: str, author: AuthorConfig, config: BuildConfig) -> str:
     company = data["company"]
     date_iso = normalize_date(data["date"])
     date_display = data.get("date_display") or format_display_date(data["date"])
-    page_title = data.get("page_title") or f"Cover Letter — Will — {company}"
-    kicker = data.get("kicker", "Cover Letter")
-    signature = data.get("signature", "Will")
-    css_href = data.get("css_href", "../letter.css")
-    wide_class = " letter-paper--wide" if data.get("wide") else ""
+    page_title = data.get("page_title") or f"Cover Letter — {author.name} — {company}"
+    signature = data.get("signature", author.name.split()[0] if author.name else "Will")
+
+    title = str(letter_field(data, author, "title"))
+    location = str(letter_field(data, author, "location"))
+    remote = bool(data["remote"]) if "remote" in data else author.remote
 
     body = build_body(data)
+    contact_table = render_contact_table(
+        title, location, remote,
+        author.email, author.phone, author.linkedin, author.github,
+    )
 
     replacements = {
         "{{PAGE_TITLE}}": html.escape(page_title),
-        "{{CSS_HREF}}": html.escape(css_href, quote=True),
-        "{{WIDE_CLASS}}": wide_class,
-        "{{KICKER}}": html.escape(kicker),
-        "{{HEADING}}": html.escape(data["heading"]),
+        "{{LETTER_CSS_HREF}}": html.escape(
+            data.get("letter_css_href", config.letter_css_href), quote=True
+        ),
+        "{{CSS_HREF}}": html.escape(data.get("css_href", config.css_href), quote=True),
+        "{{AUTHOR_NAME}}": html.escape(author.name),
+        "{{CONTACT_TABLE}}": contact_table,
         "{{DATE_ISO}}": html.escape(date_iso),
         "{{DATE_DISPLAY}}": html.escape(date_display),
         "{{BODY}}": body,
@@ -175,18 +279,36 @@ def load_config(config_path: Path) -> BuildConfig:
     deploy_raw = raw.get("deploy_dir")
     deploy_dir = None if deploy_raw in (None, "", "null") else resolve_path(ROOT, str(deploy_raw))
 
+    css_path_raw = raw.get("css_path")
+    css_path = None if css_path_raw in (None, "", "null") else resolve_path(ROOT, str(css_path_raw))
+
     return BuildConfig(
         yaml_dir=resolve_path(ROOT, str(raw["yaml_dir"])),
         html_dir=resolve_path(ROOT, str(raw["html_dir"])),
         template_path=resolve_path(ROOT, str(raw["template_path"])),
         deploy_dir=deploy_dir,
+        letter_css_href=str(raw.get("letter_css_href", "/letter.css")),
+        css_href=str(raw.get("css_href", "/cover_letters/cover-letter.css")),
+        css_path=css_path,
+        author=resolve_author(raw, config_path),
     )
+
+
+def deploy_assets(config: BuildConfig) -> None:
+    if config.deploy_dir is None:
+        return
+    if config.css_path is None or not config.css_path.exists():
+        return
+    css_dest = config.deploy_dir / config.css_path.name
+    config.deploy_dir.mkdir(parents=True, exist_ok=True)
+    shutil.copy2(config.css_path, css_dest)
+    print(f"  copied {css_dest}")
 
 
 def build_one(source: Path, template: str, config: BuildConfig, deploy: bool) -> Path:
     data = load_yaml(source)
     validate(data, source)
-    rendered = render_letter(data, template)
+    rendered = render_letter(data, template, config.author, config)
     config.html_dir.mkdir(parents=True, exist_ok=True)
 
     destination = config.html_dir / output_name(data)
@@ -263,6 +385,8 @@ def main() -> int:
         for source in sources:
             print(source.name + ":")
             build_one(source, template, config, deploy=deploy)
+        if deploy:
+            deploy_assets(config)
     except (ValueError, yaml.YAMLError, OSError) as exc:
         print(f"Error: {exc}", file=sys.stderr)
         return 1

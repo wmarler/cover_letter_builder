@@ -4,7 +4,6 @@
 slug: acme
 output: Acme.html
 company: Acme Corp
-heading: "Software Engineer · Acme Corp"
 date: 2026-01-15
 
 salutation: Dear Acme Corp,
@@ -24,10 +23,11 @@ paragraphs:
 closing: |
   Thank you for your time and consideration. I hope to speak with you soon.
 
-# Optional fields:
+# Optional per-letter overrides (defaults come from config.yaml author block):
+# title: Staff Engineer
+# location: Denver, CO
+# remote: true
 # page_title: "Cover Letter — Your Name — Acme Corp"
 # date_display: "15 January, 2026"
-# kicker: Cover Letter
-# signature: Your Name
-# css_href: ../letter.css
-# wide: false
+# signature: Will
+# css_href: ../cover-letter.css

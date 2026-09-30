@@ -1,0 +1,140 @@
+/* Cover letter document overrides — load AFTER letter.css */
+
+article.letter-paper.letter-paper--cover {
+  box-sizing: border-box;
+  width: 8.5in;
+  max-width: 8.5in;
+  min-height: 11in;
+  padding: 0.5in;
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 12pt;
+  line-height: 1.15;
+  color: #000000;
+}
+
+article.letter-paper.letter-paper--cover .letter-body,
+article.letter-paper.letter-paper--cover .letter-date,
+article.letter-paper.letter-paper--cover .letter-footer {
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 12pt;
+  line-height: 1.15;
+  color: #000000;
+}
+
+article.letter-paper.letter-paper--cover .letter-body p {
+  margin: 0 0 12pt;
+  text-align: left;
+}
+
+article.letter-paper.letter-paper--cover .letter-body p:last-child {
+  margin-bottom: 0;
+}
+
+article.letter-paper.letter-paper--cover .letter-body strong {
+  font-weight: 700;
+  color: #000000;
+}
+
+article.letter-paper.letter-paper--cover .letter-body a,
+article.letter-paper.letter-paper--cover .letter-contact-table a {
+  color: #1155cc;
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0;
+}
+
+article.letter-paper.letter-paper--cover .letter-date {
+  margin: 12pt 0;
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 12pt;
+  color: #000000;
+}
+
+article.letter-paper.letter-paper--cover .letter-footer {
+  margin-top: 12pt;
+}
+
+article.letter-paper.letter-paper--cover .letter-footer p {
+  margin: 0;
+  font-size: 12pt;
+  line-height: 1.15;
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+article.letter-paper.letter-paper--cover .letter-signature {
+  font-weight: 400;
+  font-size: 12pt;
+  font-family: Arial, Helvetica, sans-serif;
+  color: #000000;
+}
+
+/* --- Contact header --- */
+
+article.letter-paper.letter-paper--cover .letter-contact-header {
+  margin-bottom: 0;
+}
+
+article.letter-paper.letter-paper--cover .letter-name {
+  margin: 0 0 6pt;
+  font-family: 'Comfortaa', Arial, Helvetica, sans-serif;
+  font-size: 22pt;
+  font-weight: 700;
+  line-height: 1.1;
+  color: #000000;
+}
+
+article.letter-paper.letter-paper--cover .letter-contact-table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 12pt;
+  line-height: 1.15;
+  color: #000000;
+}
+
+/* Column widths from Google Doc (7.5″ content area) */
+article.letter-paper.letter-paper--cover .letter-contact-col:nth-child(1) { width: 2.03in; }
+article.letter-paper.letter-paper--cover .letter-contact-col:nth-child(2) { width: 1.34in; }
+article.letter-paper.letter-paper--cover .letter-contact-col:nth-child(3) { width: 1.97in; }
+article.letter-paper.letter-paper--cover .letter-contact-col:nth-child(4) { width: 2.16in; }
+
+article.letter-paper.letter-paper--cover .letter-contact-table td {
+  vertical-align: top;
+  padding: 0 6pt;
+}
+
+article.letter-paper.letter-paper--cover .letter-contact-table td:nth-child(2),
+article.letter-paper.letter-paper--cover .letter-contact-table td:nth-child(3) {
+  text-align: center;
+}
+
+article.letter-paper.letter-paper--cover .letter-contact-table td:first-child {
+  padding-left: 0;
+}
+
+article.letter-paper.letter-paper--cover .letter-contact-table td:last-child {
+  padding-right: 0;
+}
+
+article.letter-paper.letter-paper--cover .letter-contact-table td:nth-child(n + 2) {
+  border-left: 1px solid #000000;
+}
+
+article.letter-paper.letter-paper--cover .letter-rule {
+  margin: 10pt 0 0;
+  border: 0;
+  border-top: 1px solid #cccccc;
+}
+
+@media print {
+  article.letter-paper.letter-paper--cover {
+    width: auto;
+    max-width: none;
+    min-height: auto;
+    padding: 0.5in;
+    transform: none;
+    box-shadow: none;
+    border: none;
+  }
+}

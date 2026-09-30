@@ -48,8 +48,10 @@ python3 build.py --config /path/to/config.yaml
 |-------|----------|-------------|
 | `slug` | yes | Short id; default output filename stem |
 | `company` | yes | Company name (used in default page title) |
-| `heading` | yes | `<h1>` text on the letter |
 | `date` | yes | ISO date (`2026-09-28`) |
+| `title` | no | Job title in header (default: config `author.title`) |
+| `location` | no | Location in header (default: config `author.location`) |
+| `remote` | no | Show `(Remote)` under location |
 | `salutation` | no | Opening line (`Dear Acme,`) |
 | `paragraphs` | no | Body blocks (see below) |
 | `closing` | no | Final paragraph before signature |
@@ -86,10 +88,24 @@ Everything else is HTML-escaped automatically.
 yaml_dir: yaml
 html_dir: html
 template_path: template.html
+css_path: cover-letter.css
+css_href: ../cover-letter.css
 deploy_dir: /path/to/web/cover_letters   # or null to skip
+
+author:
+  name: Your Full Name
+  title: Senior Systems Engineer
+  location: Denver, CO
+  remote: false
+  email: you@example.com
+  phone: 555-555-5555
+  linkedin: https://linkedin.com/in/you
+  github: https://github.com/you
 ```
 
-Paths are relative to the project root unless absolute.
+Paths are relative to the project root unless absolute. The `author` block is your
+resume-style header (defaults for every letter). Override `title`, `location`, or
+`remote` in an individual letter YAML when needed.
 
 ## nginx example
 
