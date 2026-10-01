@@ -30,7 +30,7 @@ cover_letter_builder/
 
 ```bash
 python3 build.py                  # all letters (except template.yaml)
-python3 build.py pi workos        # specific slug(s)
+python3 build.py acme example     # specific slug(s)
 python3 build.py --no-deploy      # skip deploy_dir copy
 python3 build.py --config /path/to/config.yaml
 ```
@@ -48,7 +48,7 @@ python3 build.py --config /path/to/config.yaml
 |-------|----------|-------------|
 | `slug` | yes | Short id; default output filename stem |
 | `company` | yes | Company name (used in default page title) |
-| `date` | yes | ISO date (`2026-09-28`) |
+| `date` | yes | ISO date (`2026-01-15`) |
 | `title` | no | Job title in header (default: config `author.title`) |
 | `location` | no | Location in header (default: config `author.location`) |
 | `remote` | no | Show `(Remote)` under location |
@@ -58,10 +58,9 @@ python3 build.py --config /path/to/config.yaml
 | `output` | no | Output filename (default: `{slug}.html`) |
 | `page_title` | no | Browser tab title |
 | `date_display` | no | Human date (auto-generated from `date`) |
-| `kicker` | no | Small header label (default: `Cover Letter`) |
-| `signature` | no | Name in footer |
-| `css_href` | no | Stylesheet path (default: `../letter.css`) |
-| `wide` | no | Use wider paper layout |
+| `signature` | no | Sign-off name in footer (default: config `author.signature`, else first word of `author.name`) |
+| `css_href` | no | Stylesheet path (default: `/cover_letters/cover-letter.css`) |
+| `js_href` | no | Script path for viewport warning (default: `/cover_letters/cover-letter.js`) |
 
 ### Paragraph blocks
 
@@ -89,13 +88,17 @@ yaml_dir: yaml
 html_dir: html
 template_path: template.html
 css_path: cover-letter.css
-css_href: ../cover-letter.css
+js_path: cover-letter.js
+css_href: /cover_letters/cover-letter.css
+js_href: /cover_letters/cover-letter.js
+min_viewport_width: 850
 deploy_dir: /path/to/web/cover_letters   # or null to skip
 
 author:
   name: Your Full Name
-  title: Senior Systems Engineer
-  location: Denver, CO
+  # signature: Alex   # optional; defaults to first word of author.name
+  title: Your Default Job Title
+  location: City, ST
   remote: false
   email: you@example.com
   phone: 555-555-5555
@@ -115,4 +118,5 @@ location = /cover/acme {
 }
 ```
 
-Ensure your stylesheet path (`css_href` in letter YAML) resolves from the served HTML location.
+`cover-letter.css` is self-contained (desk/paper styling, typography, contact header, toast).
+Ensure `css_href` and `js_href` resolve from your web root when deploying.

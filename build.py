@@ -34,6 +34,7 @@ class AuthorConfig:
     github: str
     title: str
     location: str
+    signature: str | None = None
     remote: bool = False
 
 
@@ -43,9 +44,11 @@ class BuildConfig:
     html_dir: Path
     template_path: Path
     deploy_dir: Path | None
-    letter_css_href: str
     css_href: str
     css_path: Path | None
+    js_href: str
+    js_path: Path | None
+    min_viewport_width: int
     author: AuthorConfig
 
 
@@ -192,6 +195,7 @@ def resolve_author(raw: dict[str, Any], config_path: Path) -> AuthorConfig:
         github=str(author["github"]),
         title=str(author["title"]),
         location=str(author["location"]),
+        signature=str(author["signature"]) if author.get("signature") else None,
         remote=bool(author.get("remote", False)),
     )
 
@@ -207,7 +211,11 @@ def render_letter(data: dict, template: str, author: AuthorConfig, config: Build
     date_iso = normalize_date(data["date"])
     date_display = data.get("date_display") or format_display_date(data["date"])
     page_title = data.get("page_title") or f"Cover Letter — {author.name} — {company}"
-    signature = data.get("signature", author.name.split()[0] if author.name else "Will")
+    signature = (
+        data.get("signature")
+        or author.signature
+        or (author.name.split()[0] if author.name else "")
+    )
 
     title = str(letter_field(data, author, "title"))
     location = str(letter_field(data, author, "location"))
@@ -221,10 +229,11 @@ def render_letter(data: dict, template: str, author: AuthorConfig, config: Build
 
     replacements = {
         "{{PAGE_TITLE}}": html.escape(page_title),
-        "{{LETTER_CSS_HREF}}": html.escape(
-            data.get("letter_css_href", config.letter_css_href), quote=True
-        ),
         "{{CSS_HREF}}": html.escape(data.get("css_href", config.css_href), quote=True),
+        "{{JS_HREF}}": html.escape(data.get("js_href", config.js_href), quote=True),
+        "{{MIN_VIEWPORT_WIDTH}}": str(
+            int(data.get("min_viewport_width", config.min_viewport_width))
+        ),
         "{{AUTHOR_NAME}}": html.escape(author.name),
         "{{CONTACT_TABLE}}": contact_table,
         "{{DATE_ISO}}": html.escape(date_iso),
@@ -282,14 +291,21 @@ def load_config(config_path: Path) -> BuildConfig:
     css_path_raw = raw.get("css_path")
     css_path = None if css_path_raw in (None, "", "null") else resolve_path(ROOT, str(css_path_raw))
 
+    js_path_raw = raw.get("js_path")
+    js_path = None if js_path_raw in (None, "", "null") else resolve_path(ROOT, str(js_path_raw))
+
+    min_viewport_width = int(raw.get("min_viewport_width", 850))
+
     return BuildConfig(
         yaml_dir=resolve_path(ROOT, str(raw["yaml_dir"])),
         html_dir=resolve_path(ROOT, str(raw["html_dir"])),
         template_path=resolve_path(ROOT, str(raw["template_path"])),
         deploy_dir=deploy_dir,
-        letter_css_href=str(raw.get("letter_css_href", "/letter.css")),
         css_href=str(raw.get("css_href", "/cover_letters/cover-letter.css")),
         css_path=css_path,
+        js_href=str(raw.get("js_href", "/cover_letters/cover-letter.js")),
+        js_path=js_path,
+        min_viewport_width=min_viewport_width,
         author=resolve_author(raw, config_path),
     )
 
@@ -297,12 +313,13 @@ def load_config(config_path: Path) -> BuildConfig:
 def deploy_assets(config: BuildConfig) -> None:
     if config.deploy_dir is None:
         return
-    if config.css_path is None or not config.css_path.exists():
-        return
-    css_dest = config.deploy_dir / config.css_path.name
     config.deploy_dir.mkdir(parents=True, exist_ok=True)
-    shutil.copy2(config.css_path, css_dest)
-    print(f"  copied {css_dest}")
+    for asset_path in (config.css_path, config.js_path):
+        if asset_path is None or not asset_path.exists():
+            continue
+        dest = config.deploy_dir / asset_path.name
+        shutil.copy2(asset_path, dest)
+        print(f"  copied {dest}")
 
 
 def build_one(source: Path, template: str, config: BuildConfig, deploy: bool) -> Path:

@@ -25,9 +25,9 @@ closing: |
 
 # Optional per-letter overrides (defaults come from config.yaml author block):
 # title: Staff Engineer
-# location: Denver, CO
+# location: City, ST
 # remote: true
 # page_title: "Cover Letter — Your Name — Acme Corp"
 # date_display: "15 January, 2026"
-# signature: Will
+# signature: Alex
 # css_href: ../cover-letter.css

@@ -5,8 +5,10 @@ yaml_dir: yaml
 html_dir: html
 template_path: template.html
 css_path: cover-letter.css
-letter_css_href: /letter.css
+js_path: cover-letter.js
 css_href: /cover_letters/cover-letter.css
+js_href: /cover_letters/cover-letter.js
+min_viewport_width: 850
 
 # Optional: copy built HTML here after each build.
 # Set to null (or omit) to skip deployment.
@@ -15,6 +17,7 @@ deploy_dir: null
 # Contact header — defaults for all letters (override per letter in yaml/).
 author:
   name: Your Full Name
+  # signature: Alex   # optional; defaults to first word of author.name
   title: Your Default Job Title
   location: City, ST
   remote: false
