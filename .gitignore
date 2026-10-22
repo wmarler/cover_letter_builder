@@ -5,6 +5,9 @@ config.yml
 # Generated HTML output
 html/
 
+# Generated nginx location blocks (personal URL map)
+nginx/location_includes.conf
+
 # Personal letter content — only yaml/template.yaml is published
 yaml/*
 !yaml/template.yaml

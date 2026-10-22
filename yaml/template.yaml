@@ -30,4 +30,5 @@ closing: |
 # page_title: "Cover Letter — Your Name — Acme Corp"
 # date_display: "15 January, 2026"
 # signature: Alex
+# nginx_path: /acme
 # css_href: ../cover-letter.css

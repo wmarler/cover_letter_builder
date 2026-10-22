@@ -14,6 +14,11 @@ min_viewport_width: 850
 # Set to null (or omit) to skip deployment.
 deploy_dir: null
 
+# Optional: nginx location blocks written when you build a letter.
+# Set to null (or omit) to skip. Add an include in your server block once (see README).
+nginx_locations_path: nginx/location_includes.conf
+nginx_try_files_prefix: /cover_letters
+
 # Contact header — defaults for all letters (override per letter in yaml/).
 author:
   name: Your Full Name

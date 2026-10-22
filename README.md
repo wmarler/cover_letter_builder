@@ -24,6 +24,8 @@ cover_letter_builder/
     template.yaml         # example letter (published)
     acme.yaml             # your letters (gitignored)
   html/                   # generated output (gitignored)
+  nginx/
+    location_includes.conf   # generated location blocks (gitignored)
 ```
 
 ## Usage
@@ -61,6 +63,7 @@ python3 build.py --config /path/to/config.yaml
 | `signature` | no | Sign-off name in footer (default: config `author.signature`, else first word of `author.name`) |
 | `css_href` | no | Stylesheet path (default: `/cover_letters/cover-letter.css`) |
 | `js_href` | no | Script path for viewport warning (default: `/cover_letters/cover-letter.js`) |
+| `nginx_path` | no | URL path for nginx (default: `/{slug}`, e.g. `/acme`) |
 
 ### Paragraph blocks
 
@@ -93,6 +96,8 @@ css_href: /cover_letters/cover-letter.css
 js_href: /cover_letters/cover-letter.js
 min_viewport_width: 850
 deploy_dir: /path/to/web/cover_letters   # or null to skip
+nginx_locations_path: nginx/location_includes.conf   # or null to skip
+nginx_try_files_prefix: /cover_letters
 
 author:
   name: Your Full Name
@@ -110,13 +115,33 @@ Paths are relative to the project root unless absolute. The `author` block is yo
 resume-style header (defaults for every letter). Override `title`, `location`, or
 `remote` in an individual letter YAML when needed.
 
-## nginx example
+## nginx
+
+When `nginx_locations_path` is set, each successful build upserts a `location` block for
+that letter’s slug (pretty URL defaults to `/{slug}`; override with `nginx_path` in letter YAML).
+Existing blocks for other letters in the include file are preserved.
+
+**One-time setup:** add an `include` inside your `server` block (use the absolute path on your machine):
 
 ```nginx
-location = /cover/acme {
-    try_files /cover_letters/Acme.html =404;
+server {
+    # ...
+    include /full/path/to/cover_letter_builder/nginx/location_includes.conf;
 }
 ```
 
+After `build.py` prints that it modified `location_includes.conf`, reload nginx manually:
+
+```bash
+sudo nginx -t && sudo systemctl reload nginx
+```
+
+Example generated block:
+
+```nginx
+# cover_letter_builder slug=acme
+  location = /acme { try_files /cover_letters/Acme.html =404; }
+```
+
 `cover-letter.css` is self-contained (desk/paper styling, typography, contact header, toast).
-Ensure `css_href` and `js_href` resolve from your web root when deploying.
+Ensure `css_href`, `js_href`, and `nginx_try_files_prefix` match paths under your web root.
