@@ -163,8 +163,25 @@ article.letter-paper.letter-paper--cover .letter-name {
   color: #111111;
 }
 
-article.letter-paper.letter-paper--cover .letter-contact-table {
+article.letter-paper.letter-paper--cover .letter-contact-row {
+  display: flex;
+  align-items: flex-start;
   width: 100%;
+}
+
+article.letter-paper.letter-paper--cover .letter-contact-title {
+  flex: 0 0 2.03in;
+  box-sizing: border-box;
+  padding-right: 0.45rem;
+  font-family: 'Source Sans 3', system-ui, sans-serif;
+  font-size: 0.9375rem;
+  line-height: 1.15;
+  color: #2a2520;
+}
+
+article.letter-paper.letter-paper--cover .letter-contact-table {
+  flex: 1 1 0;
+  width: 0;
   border-collapse: collapse;
   table-layout: fixed;
   font-family: 'Source Sans 3', system-ui, sans-serif;
@@ -173,23 +190,23 @@ article.letter-paper.letter-paper--cover .letter-contact-table {
   color: #2a2520;
 }
 
-article.letter-paper.letter-paper--cover .letter-contact-col:nth-child(1) { width: 2.03in; }
-article.letter-paper.letter-paper--cover .letter-contact-col:nth-child(2) { width: 1.34in; }
-article.letter-paper.letter-paper--cover .letter-contact-col:nth-child(3) { width: 1.97in; }
-article.letter-paper.letter-paper--cover .letter-contact-col:nth-child(4) { width: 2.16in; }
+article.letter-paper.letter-paper--cover .letter-contact-col:nth-child(1) { width: 1.34in; }
+article.letter-paper.letter-paper--cover .letter-contact-col:nth-child(2) { width: 1.97in; }
+article.letter-paper.letter-paper--cover .letter-contact-col:nth-child(3) { width: 2.16in; }
 
 article.letter-paper.letter-paper--cover .letter-contact-table td {
   vertical-align: top;
   padding: 0 0.45rem;
 }
 
-article.letter-paper.letter-paper--cover .letter-contact-table td:nth-child(2),
-article.letter-paper.letter-paper--cover .letter-contact-table td:nth-child(3) {
+article.letter-paper.letter-paper--cover .letter-contact-table td:nth-child(1),
+article.letter-paper.letter-paper--cover .letter-contact-table td:nth-child(2) {
   text-align: center;
 }
 
 article.letter-paper.letter-paper--cover .letter-contact-table td:first-child {
-  padding-left: 0;
+  padding-left: 0.45rem;
+  border-left: 1px solid #c8c0b4;
 }
 
 article.letter-paper.letter-paper--cover .letter-contact-table td:last-child {

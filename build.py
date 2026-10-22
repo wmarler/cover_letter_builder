@@ -110,26 +110,26 @@ def render_contact_table(
     )
     remote_cell = "(Remote)" if remote else ""
 
-    return f"""      <table class="letter-contact-table">
-        <colgroup>
-          <col class="letter-contact-col">
-          <col class="letter-contact-col">
-          <col class="letter-contact-col">
-          <col class="letter-contact-col">
-        </colgroup>
-        <tr>
-          <td>{html.escape(title)}</td>
-          <td>{html.escape(location)}</td>
-          <td>{email_link}</td>
-          <td>{linkedin_link}</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>{html.escape(remote_cell)}</td>
-          <td>{html.escape(phone)}</td>
-          <td>{github_link}</td>
-        </tr>
-      </table>"""
+    return f"""      <div class="letter-contact-row">
+        <div class="letter-contact-title">{html.escape(title)}</div>
+        <table class="letter-contact-table">
+          <colgroup>
+            <col class="letter-contact-col">
+            <col class="letter-contact-col">
+            <col class="letter-contact-col">
+          </colgroup>
+          <tr>
+            <td>{html.escape(location)}</td>
+            <td>{email_link}</td>
+            <td>{linkedin_link}</td>
+          </tr>
+          <tr>
+            <td>{html.escape(remote_cell)}</td>
+            <td>{html.escape(phone)}</td>
+            <td>{github_link}</td>
+          </tr>
+        </table>
+      </div>"""
 
 
 def render_inline(text: str) -> str:
